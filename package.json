@@ -1,0 +1,31 @@
+{
+  "name": "compkey",
+  "version": "0.0.1",
+  "description": "Map-like object with composite keys",
+  "main": "dist/lib/ckey.js",
+  "scripts": {
+    "build": "tsc -b",
+    "lint": "tslint -p .",
+    "test": "ava -- dist/test/**.js",
+    "prepublishOnly": "rm -rf dist/ && npm run build && npm test && npm run lint"
+  },
+  "files": [
+    "dist/lib",
+    "package.json"
+  ],
+  "repository": "github:arielshaqed/compkey",
+  "keywords": [
+    "composite key",
+    "map",
+    "complex key",
+    "key as object",
+    "object keys"
+  ],
+  "author": "Ariel Shaqed (Scolnicov)",
+  "license": "MIT",
+  "devDependencies": {
+    "ava": "^3.8.2",
+    "tslint": "^5.19.0",
+    "typescript": "^3.6.2"
+  }
+}
