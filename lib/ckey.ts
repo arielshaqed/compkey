@@ -115,6 +115,8 @@ export class CMap<K extends Record<string | symbol, any>, V> {
   // casting all keys to string -- even then they are symbols.
   private values: Node<V> = { value: notPresent };
 
+  private _size = 0;
+
   constructor(private readonly keyGenerator: (v: K) => KeySequence = asValues) {}
 
   // Returns a node for key or null if none exists.
@@ -128,8 +130,10 @@ export class CMap<K extends Record<string | symbol, any>, V> {
     return node;
   }
 
+  public get size() { return this._size; }
+
   // Returns a node for key.  Creates missing parts and always returns
-  // a node if create, returns null if !create and key not found.
+  // a node.
   private makeNode(key: K): Node<V> {
     const keySeq = this.keyGenerator(key);
     let node = this.values;
@@ -154,6 +158,7 @@ export class CMap<K extends Record<string | symbol, any>, V> {
 
   public set(key: K, value: V): this {
     const node = this.makeNode(key);
+    if (node.value === notPresent) this._size++;
     node.value = value;
     return this;
   }

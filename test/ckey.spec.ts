@@ -104,3 +104,15 @@ test('CMap.clear removes elements', (t) => {
   t.false(map.has({ a: 1, b: 2 }));
   t.false(map.has({ a: 2, b: 1 }));
 });
+
+test('CMap.size counts new set keys', (t) => {
+  const map = new CMap();
+
+  t.is(map.size, 0);
+  map.set({ a: 1, b: 2 }, 1);
+  t.is(map.size, 1);
+  map.set({ a: 2, b: 1 }, 2);
+  t.is(map.size, 2);
+  map.set({ a: 1, b: 2 }, 3);
+  t.is(map.size, 2);
+});
