@@ -84,3 +84,11 @@ test('CMap.has with deep-equal keys and symbols', (t) => {
   t.false(map.has({ [s]: 1 }));
   t.false(map.has({ a: 1, b: 2, [s]: 9 }));
 });
+
+test('CMap.set overwrites existing elements', (t) => {
+  const map = new CMap();
+
+  map.set({ a: 1, b: 2 }, 1);
+  map.set({ a: 1, b: 2 }, 11);
+  t.is(map.get({ a: 1, b: 2 }), 11);
+});
