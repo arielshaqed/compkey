@@ -158,6 +158,10 @@ export class CMap<K extends Record<string | symbol, any>, V> {
     return this;
   }
 
+  public clear() {
+    this.values = { value: notPresent };
+  }
+
   // For debugging
   public _internalDump(): any { return this.values; }
 }

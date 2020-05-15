@@ -92,3 +92,15 @@ test('CMap.set overwrites existing elements', (t) => {
   map.set({ a: 1, b: 2 }, 11);
   t.is(map.get({ a: 1, b: 2 }), 11);
 });
+
+test('CMap.clear removes elements', (t) => {
+  const map = new CMap();
+
+  map.set({ a: 1, b: 2 }, 1);
+  map.set({ a: 2, b: 1 }, 2);
+  t.true(map.has({ a: 1, b: 2 }));
+  t.true(map.has({ a: 2, b: 1 }));
+  map.clear();
+  t.false(map.has({ a: 1, b: 2 }));
+  t.false(map.has({ a: 2, b: 1 }));
+});
