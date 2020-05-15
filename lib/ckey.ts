@@ -113,7 +113,7 @@ export class CMap<K extends Record<string | symbol, any>, V> {
   // The type Record<string | symbol, any> is a lie: the TypeScript
   // type system has no support for symbol keys; support it anyway by
   // casting all keys to string -- even then they are symbols.
-  private values: Node<V> = { value: notPresent };
+  private root: Node<V> = { value: notPresent };
 
   private _size = 0;
 
@@ -122,7 +122,7 @@ export class CMap<K extends Record<string | symbol, any>, V> {
   // Returns a node for key or null if none exists.
   private findNode(key: K): Node<V> | null {
     const keySeq = this.keyGenerator(key);
-    let node: Node<V> | undefined = this.values;
+    let node: Node<V> | undefined = this.root;
     for (const keyElement of keySeq) {
       node = node.next?.get(keyElement)?.get(key[keyElement as string]);
       if (!node) return null;
@@ -136,7 +136,7 @@ export class CMap<K extends Record<string | symbol, any>, V> {
   // a node.
   private makeNode(key: K): Node<V> {
     const keySeq = this.keyGenerator(key);
-    let node = this.values;
+    let node = this.root;
     for (const keyElement of keySeq) {
       if (!node.next) node.next = new Map();
       const forKeyElement = getOrMaybeAdd(node.next, keyElement, () => new Map<Key, Node<V>>());
@@ -164,9 +164,26 @@ export class CMap<K extends Record<string | symbol, any>, V> {
   }
 
   public clear() {
-    this.values = { value: notPresent };
+    this.root = { value: notPresent };
+  }
+
+  private *entriesHelper(node: Node<V>, partialKey: Partial<K>): IterableIterator<[K, V]> {
+    if (node.value !== notPresent) {
+      // partialKey should actually be complete here, by construction of the tree.
+      yield [partialKey, node.value] as [K, V];
+    }
+    for (const [keyElement, forKeyElement] of node.next?.entries() || []) {
+      for (const [key, node] of forKeyElement.entries()) {
+        const nextPartialKey = { ...partialKey, [keyElement]: key };
+        yield* this.entriesHelper(node, nextPartialKey);
+      }
+    }
+  }
+
+  public *entries(): IterableIterator<[K, V]> {
+    yield* this.entriesHelper(this.root, {});
   }
 
   // For debugging
-  public _internalDump(): any { return this.values; }
+  public _internalDump(): any { return this.root; }
 }

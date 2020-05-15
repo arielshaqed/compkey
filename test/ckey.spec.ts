@@ -116,3 +116,20 @@ test('CMap.size counts new set keys', (t) => {
   map.set({ a: 1, b: 2 }, 3);
   t.is(map.size, 2);
 });
+
+function toArray<T>(it: IterableIterator<T>): T[] {
+  const ret: T[] = [];
+  for (const t of it) ret.push(t);
+  return ret;
+}
+
+test('CMap.entries', (t) => {
+  const map = new CMap();
+
+  map.set({ a: 1, b: 2 }, 1);
+  t.deepEqual(toArray(map.entries()), [[{ a: 1, b: 2 }, 1]]);
+  map.set({ a: 2, b: 1 }, 2);
+  t.deepEqual(toArray(map.entries()), [[{ a: 1, b: 2 }, 1], [{ a: 2, b: 1 }, 2]]);
+  map.set({ a: 1, b: 2 }, 3);
+  t.deepEqual(toArray(map.entries()), [[{ a: 1, b: 2 }, 3], [{ a: 2, b: 1 }, 2]]);
+});
