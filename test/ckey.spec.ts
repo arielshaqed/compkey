@@ -33,7 +33,7 @@ test('asValues returns keys in fixed (sorted) order', (t) => {
   t.deepEqual(asValues(obj), [ 'a', 'c', 'z', s ]);
 });
 
-test('CMap with deep-equal keys', (t) => {
+test('CMap.get with deep-equal keys', (t) => {
   const map = new CMap();
 
   map.set({ a: 1, b: 2 }, 12)
@@ -48,7 +48,7 @@ test('CMap with deep-equal keys', (t) => {
   t.is(map.get({ a: 1 }), undefined, `map internals: ${dump(map)}`);
 });
 
-test('CMap with deep-equal keys and symbols', (t) => {
+test('CMap.get with deep-equal keys and symbols', (t) => {
   const map = new CMap();
   const s = Symbol('s');
 
@@ -58,7 +58,7 @@ test('CMap with deep-equal keys and symbols', (t) => {
   t.is(map.get({ a: 1, [s]: 0, b: 2 }), 1);
 });
 
-test('CMap with insertion-order keys', (t) => {
+test('CMap.get with insertion-order keys', (t) => {
   const map = new CMap(asObjects);
 
   map.set({ a: 1, b: 2 }, 12)
@@ -70,4 +70,17 @@ test('CMap with insertion-order keys', (t) => {
   t.is(map.get({ b: 2, a: 1 }), '12');
   t.is(map.get({ a: 1, b: 3 }), 13);
   t.is(map.get({ a: 1 }), 1);
+});
+
+test('CMap.has with deep-equal keys and symbols', (t) => {
+  const map = new CMap();
+  const s = Symbol('s');
+
+  map.set({ [s]: 0, a: 1, b: 2 }, 1);
+  map.set({ [s]: 1, a: 1, b: 2 }, 2);
+  t.true(map.has({ a: 1, b: 2, [s]: 1 }));
+  t.true(map.has({ a: 1, [s]: 0, b: 2 }));
+  t.false(map.has({ a: 1 }));
+  t.false(map.has({ [s]: 1 }));
+  t.false(map.has({ a: 1, b: 2, [s]: 9 }));
 });

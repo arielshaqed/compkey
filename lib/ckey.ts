@@ -141,6 +141,11 @@ export class CMap<K extends Record<string | symbol, any>, V> {
     return node;
   }
 
+  public has(key: K): boolean {
+    const node = this.findNode(key);
+    return node !== null && node.value !== notPresent;
+  }
+
   public get(key: K): V | undefined {
     const node = this.findNode(key);
     if (!node || node.value === notPresent) return undefined;
