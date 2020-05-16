@@ -12,12 +12,12 @@ test('asObjects returns keys in insertion order, strings before symbols', (t) =>
     z: { x: 2, y: 2 },
     c: 3,
   };
-  t.deepEqual(asObjects(obj), [ 'a', 'z', 'c']);
+  t.deepEqual([...asObjects(obj)], [ 'a', 'z', 'c']);
 
   const s = Symbol('s');
   obj[s] = 'symbol';
   obj['d'] = 4;
-  t.deepEqual(asObjects(obj), [ 'a', 'z', 'c', 'd', s]);
+  t.deepEqual([...asObjects(obj)], [ 'a', 'z', 'c', 'd', s]);
 });
 
 test('asValues returns keys in fixed (sorted) order', (t) => {
