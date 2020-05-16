@@ -68,16 +68,28 @@ export function compareScalars(a: Scalar, b: Scalar): number {
 
 type KeySequence = IterableIterator<string | symbol> | Array<string | symbol>;
 
+type ArrayOrItIt<T> = T[] | IterableIterator<T>;
+
+function *filterIt<T>(pred: (t: T) => boolean, it: ArrayOrItIt<T>): IterableIterator<T> {
+  for (const v of it) {
+    if (pred(v)) yield v;
+  }
+}
+
 // Keys generator matching "JavaScript object" behaviour: all keys
 // contain (recursively) matching values, in (almost) the same
 // insertion order.  This is *not* deep equality.
 //
 // This is "*almost*" insertion order: symbol keys come after string
 // keys because JavaScript.
-export function asObjects<K>(obj: K): Array<symbol | string> {
-  return (Object.getOwnPropertyNames(obj) as Array<symbol | string>)
-    .concat(Object.getOwnPropertySymbols(obj))
-    .filter((key) => Object.getOwnPropertyDescriptor(obj, key)!.enumerable);
+export function *asObjects<K>(obj: K): IterableIterator<symbol | string> {
+  function isEnumerable(key: string | symbol) {
+    if (Object.getOwnPropertyDescriptor(obj, key)!.enumerable) return true;
+    return false;
+  }
+
+  yield* filterIt(isEnumerable, Object.getOwnPropertyNames(obj));
+  yield* filterIt(isEnumerable, Object.getOwnPropertySymbols(obj));
 }
 
 // Keys generator matching "deep equals" behaviour: all keys contain
@@ -85,7 +97,7 @@ export function asObjects<K>(obj: K): Array<symbol | string> {
 // sort-of works for arrays, too, but does not return indices in
 // ascending numerical order.
 export function asValues<K>(obj: K): Array<symbol | string> {
-  return asObjects(obj).sort(compareScalars);
+  return [...asObjects(obj)].sort(compareScalars);
 }
 
 // TODO(ariels): Key generator for arrays.
