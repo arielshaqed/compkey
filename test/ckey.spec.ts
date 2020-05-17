@@ -6,18 +6,22 @@ function dump<K, V>(map: CMap<K, V>): string {
   return inspect(map._internalDump(), { depth: null });
 }
 
+function toArray<T>(it: IterableIterator<T>): T[] {
+  return [...it];
+}
+
 test('asObjects returns keys in insertion order, strings before symbols', (t) => {
   const obj: any = {
     a: 1,
     z: { x: 2, y: 2 },
     c: 3,
   };
-  t.deepEqual([...asObjects(obj)], [ 'a', 'z', 'c']);
+  t.deepEqual(toArray(asObjects(obj)), [ 'a', 'z', 'c']);
 
   const s = Symbol('s');
   obj[s] = 'symbol';
   obj['d'] = 4;
-  t.deepEqual([...asObjects(obj)], [ 'a', 'z', 'c', 'd', s]);
+  t.deepEqual(toArray(asObjects(obj)), [ 'a', 'z', 'c', 'd', s]);
 });
 
 test('asValues returns keys in fixed (sorted) order', (t) => {
@@ -117,14 +121,8 @@ test('CMap.size counts new set keys', (t) => {
   t.is(map.size, 2);
 });
 
-function toArray<T>(it: IterableIterator<T>): T[] {
-  const ret: T[] = [];
-  for (const t of it) ret.push(t);
-  return ret;
-}
-
 test('CMap.entries', (t) => {
-  const map = new CMap();
+  const map = new CMap(asObjects);
 
   map.set({ a: 1, b: 2 }, 1);
   t.deepEqual(toArray(map.entries()), [[{ a: 1, b: 2 }, 1]]);
@@ -132,4 +130,35 @@ test('CMap.entries', (t) => {
   t.deepEqual(toArray(map.entries()), [[{ a: 1, b: 2 }, 1], [{ a: 2, b: 1 }, 2]]);
   map.set({ a: 1, b: 2 }, 3);
   t.deepEqual(toArray(map.entries()), [[{ a: 1, b: 2 }, 3], [{ a: 2, b: 1 }, 2]]);
+  // BUG(ariels): This is *not* insertion order!
+  map.set({ a: 1 }, 0 );
+  t.deepEqual(toArray(map.entries()), [[{ a: 1 }, 0], [{ a: 1, b: 2 }, 3], [{ a: 2, b: 1 }, 2]]);
+});
+
+test('CMap.keys', (t) => {
+  const map = new CMap(asObjects);
+
+  map.set({ a: 1, b: 2 }, 1);
+  t.deepEqual(toArray(map.keys()), [{ a: 1, b: 2 }]);
+  map.set({ a: 2, b: 1 }, 2);
+  t.deepEqual(toArray(map.keys()), [{ a: 1, b: 2 }, { a: 2, b: 1 }]);
+  map.set({ a: 1, b: 2 }, 3);
+  t.deepEqual(toArray(map.keys()), [{ a: 1, b: 2 }, { a: 2, b: 1 }]);
+  // BUG(ariels): This is *not* insertion order!
+  map.set({ a: 1 }, 0 );
+  t.deepEqual(toArray(map.keys()), [{ a: 1 }, { a: 1, b: 2 }, { a: 2, b: 1 }]);
+});
+
+test('CMap.values', (t) => {
+  const map = new CMap(asObjects);
+
+  map.set({ a: 1, b: 2 }, 1);
+  t.deepEqual(toArray(map.values()), [1]);
+  map.set({ a: 2, b: 1 }, 2);
+  t.deepEqual(toArray(map.values()), [1, 2]);
+  map.set({ a: 1, b: 2 }, 3);
+  t.deepEqual(toArray(map.values()), [3, 2]);
+  // BUG(ariels): This is *not* insertion order!
+  map.set({ a: 1 }, 0 );
+  t.deepEqual(toArray(map.values()), [0, 3, 2]);
 });

@@ -76,6 +76,10 @@ function *filterIt<T>(pred: (t: T) => boolean, it: ArrayOrItIt<T>): IterableIter
   }
 }
 
+function *mapIt<T, U>(proj: (t: T) => U, it: ArrayOrItIt<T>): IterableIterator<U> {
+  for (const v of it) yield proj(v);
+}
+
 // Keys generator matching "JavaScript object" behaviour: all keys
 // contain (recursively) matching values, in (almost) the same
 // insertion order.  This is *not* deep equality.
@@ -182,6 +186,14 @@ export class CMap<K extends Record<string | symbol, any>, V> {
 
   public *entries(): IterableIterator<[K, V]> {
     yield* this.entriesHelper(this.root, {});
+  }
+
+  public *keys(): IterableIterator<K> {
+    yield* mapIt(([k]) => k, this.entries());
+  }
+
+  public *values(): IterableIterator<V> {
+    yield* mapIt(([_, v]) => v, this.entries());
   }
 
   // For debugging
