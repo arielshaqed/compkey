@@ -162,3 +162,10 @@ test('CMap.values', (t) => {
   map.set({ a: 1 }, 0 );
   t.deepEqual(toArray(map.values()), [0, 3, 2]);
 });
+
+test('CMap.keys in wrong order (#4)', (t) => {
+  const m = new CMap();
+  m.set({ a: 1, b: 2}, 1).set({ a: 2 }, 2).set({ a: 1, b: 3}, 3);
+  t.deepEqual([...m.keys()], [{ a: 1, b: 2 }, { a: 1, b: 3}, { a: 2 }]);
+});
+
