@@ -168,4 +168,3 @@ test('CMap.keys in wrong order (#4)', (t) => {
   m.set({ a: 1, b: 2}, 1).set({ a: 2 }, 2).set({ a: 1, b: 3}, 3);
   t.deepEqual([...m.keys()], [{ a: 1, b: 2 }, { a: 1, b: 3}, { a: 2 }]);
 });
-

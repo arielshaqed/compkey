@@ -113,7 +113,7 @@ function getOrMaybeAdd<A, B>(map: Map<A, B>, a: A, makeEl: () => B): B {
   return el;
 }
 
-export class CMap<K extends Record<string | symbol, any>, V> {
+export class CMap<K extends Record<string | symbol, any>, V> implements Iterable<[K, V]> {
   // The type Record<string | symbol, any> is a lie: the TypeScript
   // type system has no support for symbol keys; support it anyway by
   // casting all keys to string -- even then they are symbols.
@@ -186,6 +186,10 @@ export class CMap<K extends Record<string | symbol, any>, V> {
 
   public *entries(): IterableIterator<[K, V]> {
     yield* this.entriesHelper(this.root, {});
+  }
+
+  public [Symbol.iterator](): IterableIterator<[K,V]> {
+    return this.entries();
   }
 
   public *keys(): IterableIterator<K> {
