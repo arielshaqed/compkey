@@ -7,7 +7,8 @@
     "build": "tsc -b",
     "lint": "tslint -p .",
     "test": "ava -- dist/test/**.js",
-    "prepublishOnly": "rm -rf dist/ && npm run build && npm test && npm run lint"
+    "prepublishOnly": "rm -rf dist/ && npm run build && npm test && npm run lint",
+    "coverage": "nyc --reporter=lcov ava -- dist/test/**.js"
   },
   "files": [
     "dist/lib",
@@ -25,6 +26,7 @@
   "license": "MIT",
   "devDependencies": {
     "ava": "^3.8.2",
+    "nyc": "^15.0.1",
     "tslint": "^5.19.0",
     "typescript": "^3.6.2"
   }

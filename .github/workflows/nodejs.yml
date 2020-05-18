@@ -25,3 +25,24 @@ jobs:
         npm run lint
       env:
         CI: true
+
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Use Node.js
+      uses: actions/setup-node@v1
+      with:
+        node-version: 12.x
+    - name: npm install, build, test-cov
+      run: |
+        npm install
+        npm run build
+        npm run coverage
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1
+      with:
+        flags: unittests
+        env_vars: OS
+        name: codecov-umbrella
+        fail_ci_if_error: false
