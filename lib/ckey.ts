@@ -76,6 +76,10 @@ function *filterIt<T>(pred: (t: T) => boolean, it: ArrayOrItIt<T>): IterableIter
   }
 }
 
+function *mapIt<T, U>(proj: (t: T) => U, it: ArrayOrItIt<T>): IterableIterator<U> {
+  for (const v of it) yield proj(v);
+}
+
 // Keys generator matching "JavaScript object" behaviour: all keys
 // contain (recursively) matching values, in (almost) the same
 // insertion order.  This is *not* deep equality.
@@ -109,18 +113,20 @@ function getOrMaybeAdd<A, B>(map: Map<A, B>, a: A, makeEl: () => B): B {
   return el;
 }
 
-export class CMap<K extends Record<string | symbol, any>, V> {
+export class CMap<K extends Record<string | symbol, any>, V> implements Iterable<[K, V]> {
   // The type Record<string | symbol, any> is a lie: the TypeScript
   // type system has no support for symbol keys; support it anyway by
   // casting all keys to string -- even then they are symbols.
-  private values: Node<V> = { value: notPresent };
+  private root: Node<V> = { value: notPresent };
+
+  private _size = 0;
 
   constructor(private readonly keyGenerator: (v: K) => KeySequence = asValues) {}
 
   // Returns a node for key or null if none exists.
   private findNode(key: K): Node<V> | null {
     const keySeq = this.keyGenerator(key);
-    let node: Node<V> | undefined = this.values;
+    let node: Node<V> | undefined = this.root;
     for (const keyElement of keySeq) {
       node = node.next?.get(keyElement)?.get(key[keyElement as string]);
       if (!node) return null;
@@ -128,17 +134,24 @@ export class CMap<K extends Record<string | symbol, any>, V> {
     return node;
   }
 
+  public get size() { return this._size; }
+
   // Returns a node for key.  Creates missing parts and always returns
-  // a node if create, returns null if !create and key not found.
+  // a node.
   private makeNode(key: K): Node<V> {
     const keySeq = this.keyGenerator(key);
-    let node = this.values;
+    let node = this.root;
     for (const keyElement of keySeq) {
       if (!node.next) node.next = new Map();
       const forKeyElement = getOrMaybeAdd(node.next, keyElement, () => new Map<Key, Node<V>>());
       node = getOrMaybeAdd(forKeyElement, key[keyElement as string], () => ({ value: notPresent }));
     }
     return node;
+  }
+
+  public has(key: K): boolean {
+    const node = this.findNode(key);
+    return node !== null && node.value !== notPresent;
   }
 
   public get(key: K): V | undefined {
@@ -149,10 +162,64 @@ export class CMap<K extends Record<string | symbol, any>, V> {
 
   public set(key: K, value: V): this {
     const node = this.makeNode(key);
+    if (node.value === notPresent) this._size++;
     node.value = value;
     return this;
   }
 
+  public clear() {
+    this.root = { value: notPresent };
+  }
+
+  public delete(key: K): boolean {
+    var deleteFrom: Node<V> | null = null;
+    let node: Node<V> | undefined = this.root;
+    const keySeq = this.keyGenerator(key);
+    for (const keyElement of keySeq) {
+      node = node.next?.get(keyElement)?.get(key[keyElement as string]);
+      if (!node) return false;
+      if (!deleteFrom) {
+	if (node.next!.size === 1) deleteFrom = node;
+      } else {
+	if (node.next?.size !== 1) deleteFrom = null;
+      }
+    }
+    if (!node || node.value === notPresent) return false;
+    node.value = notPresent;
+    if (deleteFrom && !node.next) deleteFrom.next = undefined;
+    --this._size;
+    return true;
+  }
+
+  private *entriesHelper(node: Node<V>, partialKey: Partial<K>): IterableIterator<[K, V]> {
+    if (node.value !== notPresent) {
+      // partialKey should actually be complete here, by construction of the tree.
+      yield [partialKey, node.value] as [K, V];
+    }
+    for (const [keyElement, forKeyElement] of node.next?.entries() || []) {
+      for (const [key, node] of forKeyElement.entries()) {
+        const nextPartialKey = { ...partialKey, [keyElement]: key };
+        yield* this.entriesHelper(node, nextPartialKey);
+      }
+    }
+  }
+
+  public *entries(): IterableIterator<[K, V]> {
+    yield* this.entriesHelper(this.root, {});
+  }
+
+  public [Symbol.iterator](): IterableIterator<[K,V]> {
+    return this.entries();
+  }
+
+  public *keys(): IterableIterator<K> {
+    yield* mapIt(([k]) => k, this.entries());
+  }
+
+  public *values(): IterableIterator<V> {
+    yield* mapIt(([_, v]) => v, this.entries());
+  }
+
   // For debugging
-  public _internalDump(): any { return this.values; }
+  public _internalDump(): any { return this.root; }
 }
