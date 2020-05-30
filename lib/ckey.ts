@@ -171,6 +171,26 @@ export class CMap<K extends Record<string | symbol, any>, V> implements Iterable
     this.root = { value: notPresent };
   }
 
+  public delete(key: K): boolean {
+    var deleteFrom: Node<V> | null = null;
+    let node: Node<V> | undefined = this.root;
+    const keySeq = this.keyGenerator(key);
+    for (const keyElement of keySeq) {
+      node = node.next?.get(keyElement)?.get(key[keyElement as string]);
+      if (!node) return false;
+      if (!deleteFrom) {
+	if (node.next!.size === 1) deleteFrom = node;
+      } else {
+	if (node.next?.size !== 1) deleteFrom = null;
+      }
+    }
+    if (!node || node.value === notPresent) return false;
+    node.value = notPresent;
+    if (deleteFrom && !node.next) deleteFrom.next = undefined;
+    --this._size;
+    return true;
+  }
+
   private *entriesHelper(node: Node<V>, partialKey: Partial<K>): IterableIterator<[K, V]> {
     if (node.value !== notPresent) {
       // partialKey should actually be complete here, by construction of the tree.

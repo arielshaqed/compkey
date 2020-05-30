@@ -26,6 +26,7 @@
   "license": "MIT",
   "devDependencies": {
     "ava": "^3.8.2",
+    "knuth-shuffle-seeded": "^1.0.6",
     "nyc": "^15.0.1",
     "tslint": "^5.19.0",
     "typescript": "^3.6.2"
